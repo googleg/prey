@@ -17,6 +17,11 @@ send_report(){
 				echo -e "$trace_list" > "$trace_file"
 				echo " -- Posting data via $post_method..."
 				eval 'send_via_'"${post_method}"''
+				if [ -n "$enable_ftp" ]; then
+					echo " -- Posting data via FTP..."
+					send_via_ftp
+
+				fi
 				rm -f "$trace_file"
 			fi
 		remove_traces
@@ -68,24 +73,42 @@ send_via_scp(){
 		echo -e " -- Uploading the stuff to $scp_path in $scp_server..."
 		local new_folder="prey_data_`echo $start_time | sed 'y/ :/_-/'`"
 		ssh $scp_user@$scp_server mkdir $scp_path/$new_folder
-		response=`scp $ssh_options "$trace_file" "$file_list" $scp_user@$scp_server:$scp_path/$new_folder`
+		response=`scp $trace_file $file_list $scp_user@$scp_server:$scp_path/$new_folder`
 	else
 		echo ' !! You need to set up a server in order to send the report via SCP!'
 	fi
 }
 
-# SFTP posting by http://github.com/birdtori
-send_via_sftp(){
-	if [[ -n "$sftp_server" && -n "$sftp_path" ]]; then
-		local new_folder="prey_data_`echo $start_time | sed 'y/ :/_-/'`"
-		echo -e " -- Uploading the stuff to $sftp_path/$new_folder in $sftp_server..."
-		local batch="$tmpdir/sftp.script"
-		echo "mkdir $sftp_path/$new_folder"                           >  "$batch"
-		echo "put "$trace_file" $sftp_path/$new_folder/"              >> "$batch"
-		for f in $file_list; do echo "put $f $sftp_path/$new_folder/" >> "$batch"; done
-		echo "bye"                                                    >> "$batch"
-		response=`sftp $ssh_options -b $batch $sftp_user@$sftp_server`
+send_via_ftp(){
+	if [[ -n "$ftp_server" && -n "$ftp_path" && -n "$ftp_username" && -n "$ftp_password" ]]; then
+		echo -e " -- (FTP) Uploading the stuff to $ftp_path in $ftp_server..."
+
+	
+	local decoded_ftp_pass=`decrypt "$ftp_password"`
+
+	local the_date=`date +%Y%m%d-%H%M`
+	
+	zipfile="$tmpdir/""$the_date""prey_report.zip"
+
+	zip -D $zipfile $trace_file $file_list 
+	
+	if [ $os == "windows" ]; then
+		ftp_script="$tmpdir"/prey_ftpscript
+		echo "user $ftp_username" > $ftp_script
+		echo "$decoded_ftp_pass" >> $ftp_script
+		echo "cd $ftp_path" >> $ftp_script
+		echo "binary" >> $ftp_script
+		echo "put $zipfile" >> $ftp_script
+		echo "bye" >> $ftp_script
+		ftp -ni -s:$ftp_script $ftp_server
+		rm $ftp_script
+
 	else
-		echo ' !! You need to set up a server in order to send the report via SFTP!'
+		ftp -ni -u ftp://"$ftp_username":"$decoded_ftp_pass"@"$ftp_server""$ftp_path""$zipfile" "$zipfile"
+	fi
+	rm $zipfile
+	else
+		echo 'Parameters missing in order to send the report via FTP!'
 	fi
 }
+
