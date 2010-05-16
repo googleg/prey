@@ -17,7 +17,7 @@ readonly base_path=`dirname "$0"`
 
 . "$base_path/version"
 . "$base_path/config"
-if [ ! -f "lang/$lang" ]; then # fallback to english in case the lang is missing
+if [ ! -f "$base_path/lang/$lang" ]; then # fallback to english in case the lang is missing
 	lang='en'
 fi
 . "$base_path/lang/$lang"
@@ -48,18 +48,6 @@ if [ $connected == 0 ]; then
 	fi
 else
 	echo ' -- Got network connection!'
-fi
-
-
-####################################################################
-# if we have an API key and no Device key, let's try to auto setup
-####################################################################
-
-if [[ -n "$api_key" && -z "$device_key" ]]; then
-
-	echo -e "\n${bold} >> Running self setup!${bold_end}\n"
-	self_setup
-
 fi
 
 ####################################################################
@@ -108,11 +96,12 @@ if [ -n "$check_url" ]; then
 		run_active_modules
 
 		####################################################################
-		# lets send whatever we've gathered
+		# lets send whatever we've gathered and run any pending jobs
 		####################################################################
 
 		echo -e "\n${bold} >> Sending report!${bold_end}\n"
 		send_report
+		run_delayed_jobs &
 
 		echo -e "\n$STRING_DONE"
 
@@ -121,11 +110,5 @@ if [ -n "$check_url" ]; then
 	fi
 fi
 
-####################################################################
-# if we have any pending jobs, run them
-####################################################################
-
-run_pending_jobs &
 delete_tmpdir
-
 exit 0

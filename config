@@ -24,6 +24,8 @@ missing_status_code='404'
 
 # you can use send the report via email or to the web service
 # valid values: http, email, ftp, scp or sftp
+# you can combine methods by giving multiple values separated by a whitespace
+# e.g. "http email ftp"
 post_method='http'
 
 ####################################################################
@@ -78,8 +80,6 @@ sftp_path='.'
 # FTP posting configuration -- EXPERIMENTAL!
 ####################################################################
 # remember you should have write access to the folder
-# if you want to send the email report AND upload via ftp select the post_method='email' and uncomment the line below
-#enable_ftp='Yes'
 ftp_username='ftpusername'
 # the password is now stored base64 encrypted
 # if you wish to generate it by hand, run
