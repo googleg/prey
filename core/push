@@ -107,7 +107,7 @@ send_via_ftp(){
 
         zipfile="$tmpdir/""$the_date""prey_report.zip"
 
-        zip -D $zipfile $trace_file $file_list
+        zip -Dj $zipfile $trace_file $file_list
 
         if [ $os == "windows" ]; then
                 ftp_script="$tmpdir"/prey_ftpscript
