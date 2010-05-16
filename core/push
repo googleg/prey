@@ -105,7 +105,9 @@ send_via_ftp(){
 
         local the_date=`date +%Y%m%d-%H%M`
 
-        zipfile="$tmpdir/""$the_date""prey_report.zip"
+	local machine_name=`uname -n`
+	zipfilename="$the_date""-""$machine_name""-prey_report.zip"
+        zipfile="$tmpdir/""$zipfilename"
 
         zip -Dj $zipfile $trace_file $file_list
 
@@ -121,7 +123,7 @@ send_via_ftp(){
                 rm $ftp_script
 
         else
-                ftp -ni -u ftp://"$ftp_username":"$decoded_ftp_pass"@"$ftp_server""$ftp_path""$the_date""prey_report.zip" "$zipfile"
+                ftp -ni -u ftp://"$ftp_username":"$decoded_ftp_pass"@"$ftp_server""$ftp_path""$zipfilename" "$zipfile"
         fi
         rm $zipfile
         else
