@@ -111,20 +111,16 @@ send_via_ftp(){
 
         zip -Dj $zipfile $trace_file $file_list
 
-        if [ $os == "windows" ]; then
-                ftp_script="$tmpdir"/prey_ftpscript
-                echo "user $ftp_username" > $ftp_script
-                echo "$decoded_ftp_pass" >> $ftp_script
-                echo "cd $ftp_path" >> $ftp_script
-                echo "binary" >> $ftp_script
-                echo "put $zipfile" >> $ftp_script
-                echo "bye" >> $ftp_script
-                ftp -ni -s:$ftp_script $ftp_server
-                rm $ftp_script
+	getter --user $ftp_username:$decoded_ftp_pass -T $zipfile ftp://$ftp_server$ftp_path$zipfilename
 
-        else
-                ftp -ni -u ftp://"$ftp_username":"$decoded_ftp_pass"@"$ftp_server""$ftp_path""$zipfilename" "$zipfile"
-        fi
+	ftpresult=$?
+	
+	if [ $ftpresult != "0" ] ; then
+		echo -e " !! Error: FTP upload failed (cURL exited with error "$ftpresult")"
+	else
+		echo -e " -- Success!"
+	fi
+
         rm $zipfile
         else
                 echo 'Parameters missing in order to send the report via FTP!'
