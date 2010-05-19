@@ -111,7 +111,7 @@ send_via_ftp(){
 
         zip -Dj $zipfile $trace_file $file_list
 
-	getter --user $ftp_username:$decoded_ftp_pass -T $zipfile ftp://$ftp_server$ftp_path$zipfilename
+	getter --user "$ftp_username":"$decoded_ftp_pass" -T $zipfile ftp://"$ftp_server""$ftp_path"$zipfilename
 
 	ftpresult=$?
 	
